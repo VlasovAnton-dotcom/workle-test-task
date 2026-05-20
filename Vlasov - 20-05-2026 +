@@ -1,0 +1,296 @@
+Вариант решения задачи - Vlasov - 20-05-2026
+Тестовое задание Workly – Vlasov – 20-05-2026
+Разберу задачу пошагово — от настройки проекта до реализации функционала.
+Шаг 1. Настройка проекта
+Создайте проект через Vue CLI:
+vue create workle-test
+cd workle-test
+Установите зависимости:
+npm install axios
+Шаг 2. Структура проекта
+Создайте структуру согласно заданию:
+workle-test/
+├── public/
+│   ├── favicon.ico
+│   └── index.html
+└── src/
+    ├── App.vue
+    ├── main.js
+    ├── assets/
+    │   ├── fonts/
+    │   │   ├── fonts.css
+    │   │   ├── RobotoCondensed-Bold.svg
+    │   │   ├── RobotoCondensed-Bold.ttf
+    │   │   ├── RobotoCondensed-Bold.woff
+    │   │   ├── RobotoCondensed-Regular.svg
+    │   │   ├── RobotoCondensed-Regular.ttf
+    │   │   └── RobotoCondensed-Regular.woff
+    │   └── img/
+    │       ├── eye.svg
+    │       └── loading.png
+    └── components/
+        ├── Error/
+        │   └── Error.vue
+        ├── Loading/
+        │   └── Loading.vue
+        ├── Pagination/
+        │   └── Pagination.vue
+        └── Post/
+            ├── Author.vue
+            ├── Post.vue
+            └── Views.vue
+Шаг 3. Базовые файлы
+src/main.js
+import Vue from 'vue';
+import App from './App.vue';
+
+Vue.config.productionTip = false;
+
+new Vue({
+  render: h => h(App),
+}).$mount('#app');
+public/index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title>Workle Test</title>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+</html>
+Шаг 4. Компоненты
+components/Loading/Loading.vue (колесико загрузки)
+<template>
+  <div class="loading">
+    <img src="../../assets/img/loading.png" alt="Loading...">
+  </div>
+</template>
+
+<style scoped>
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+</style>
+components/Error/Error.vue (сообщение об ошибке)
+<template>
+  <div class="error">
+    <p>Произошла ошибка при загрузке данных</p>
+    <button @click="$emit('retry')">Повторить</button>
+  </div>
+</template>
+
+<style scoped>
+.error {
+  text-align: center;
+  padding: 20px;
+  background: #ffeaea;
+  color: #d62929;
+  border-radius: 5px;
+}
+</style>
+components/Post/Author.vue
+<template>
+  <div class="author">
+    <a
+      :href="author.links.html"
+      target="_blank"
+      @click.stop
+    >
+      {{ author.name }}
+    </a>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Author',
+  props: {
+    author: {
+      type: Object,
+      required: true
+    }
+  }
+};
+</script>
+
+<style scoped>
+.author a {
+  color: #333;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.author a:hover {
+  text-decoration: underline;
+}
+</style>
+components/Post/Views.vue
+<template>
+  <div class="views">
+    <img src="../../assets/img/eye.svg" alt="Views">
+    {{ views }}
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Views',
+  props: {
+    views: {
+      type: Number,
+      required: true
+    }
+  }
+};
+</script>
+
+<style scoped>
+.views {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #666;
+  font-size: 0.9em;
+}
+</style>
+components/Post/Post.vue
+<template>
+  <div class="post">
+    <img
+      :src="post.urls.regular"
+      :alt="post.alt_description || 'Photo'"
+      class="post-image"
+    >
+    <div class="post-info">
+      <Author :author="post.user" />
+      <Views :views="post.views" />
+    </div>
+  </div>
+</template>
+
+<script>
+import Author from './Author.vue';
+import Views from './Views.vue';
+
+export default {
+  name: 'Post',
+  components: { Author, Views },
+  props: {
+    post: {
+      type: Object,
+      required: true
+    }
+  }
+};
+</script>
+
+<style scoped>
+.post {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.post-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.post-info {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+</style>
+components/Pagination/Pagination.vue
+<template>
+  <div class="pagination">
+    <button
+      :disabled="currentPage === 1"
+      @click="$emit('page-change', currentPage - 1)"
+    >
+      Назад
+    </button>
+    <span>Страница {{ currentPage }}</span>
+    <button @click="$emit('page-change', currentPage + 1)">Вперёд</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'Pagination',
+  props: {
+    currentPage: {
+      type: Number,
+      required: true
+    }
+  }
+};
+</script>
+
+<style scoped>
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>
+Шаг 5. Главный компонент (App.vue)
+<template>
+  <div id="app">
+    <h1>Фотографии с Unsplash</h1>
+    
+    <Loading v-if="showLoadingWheel && isLoading" />
+    
+    <Error
+      v-if="showUserErrorMessage && error"
+      @retry="fetchPhotos"
+    />
+    
+    <div v-else-if="photos.length > 0" class="posts-grid">
+      <Post
+        v-for="photo in photos"
+        :key="photo.id"
+        :post="photo"
+      />
+    </div>
+    
+    <Pagination
+      v-if="photos.length > 0"
+      :current-page="currentPage"
+      @page-change="handlePageChange"
+    />
+  </div>
+</template>
+
+<script>
+import axios from 'axios';
+import Post from './components/Post/Post.vue';
+import Loading from './components/Loading/Loading.vue';
+import Error from './components/Error/Error.vue';
+import Pagination from './components/Pagination/Pagination.vue';
+
+export default {
+  name: 'App',
+  components: { Post, Loading, Error, Pagination },
+  data() {
+    return {
+      photos: [],
+      currentPage:
